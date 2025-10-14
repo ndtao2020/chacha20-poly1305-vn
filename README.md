@@ -1,5 +1,6 @@
-# chacha20-poly1305-vn
-[![npm](https://img.shields.io/npm/v/chacha20-poly1305-vn)](https://www.npmjs.com/package/chacha20-poly1305-vn)
+# chacha-poly-wasm-web
+
+[![npm](https://img.shields.io/npm/v/chacha-poly-wasm-web)](https://www.npmjs.com/package/chacha-poly-wasm-web)
 
 ### 🛠️ Installing `wasm-pack`
 
@@ -22,7 +23,7 @@ wasm-pack publish
 ## Usage
 
 ```js
-import init, { XChaCha20Poly1305 } from "chacha20-poly1305-vn";
+import init, { XChaCha20Poly1305 } from "chacha-poly-wasm-web";
 
 const NONCE_LENGTH = 24;
 const SECRET_LENGTH = 32;
@@ -38,13 +39,13 @@ const random = (characters, length) => {
     return result;
 };
 
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 init().then(() => {
 
     const secrectKey = random(Z, SECRET_LENGTH);
-    const secrectBytes = textEncoder.encode(secrectKey)
+    const secrectBytes = encoder.encode(secrectKey)
 
     console.log("secrect key: ", secrectKey);
 
@@ -58,17 +59,15 @@ init().then(() => {
 
     // ========================= [Encrypt] =========================
 
-    const encryptedBytes = xchacha20.encrypt(textEncoder.encode(nonceKey), textEncoder.encode(data))
+    const encrypted = xchacha20.encrypt(encoder.encode(nonceKey), encoder.encode(data))
 
-    const encryptedStr = textDecoder.decode(encryptedBytes)
-
-    console.log("encrypted: ", encryptedStr);
+    console.log("encrypted: ", decoder.decode(encrypted));
 
     // ========================= [Decrypt] =========================
 
-    const decryptedBytes = xchacha20.decrypt(textEncoder.encode(nonceKey), encryptedBytes)
+    const decrypted = xchacha20.decrypt(encoder.encode(nonceKey), encrypted)
 
-    const decryptedStr = textDecoder.decode(decryptedBytes)
+    const decryptedStr = decoder.decode(decrypted)
 
     console.log("decrypted: ", decryptedStr);
 
