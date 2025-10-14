@@ -1,3 +1,6 @@
+#[global_allocator]
+pub static GLOBAL_ALLOCATOR: &alloc_cat::AllocCat = &alloc_cat::ALLOCATOR;
+
 use chacha20poly1305::aead::{Aead, KeyInit};
 use wasm_bindgen::prelude::*;
 
@@ -7,30 +10,32 @@ const XNONCE_LENGTH: usize = 24;
 
 #[wasm_bindgen]
 pub struct ChaCha20Poly1305 {
-    secret_key: Vec<u8>,
+    secret: Vec<u8>,
+    nonce: Vec<u8>,
 }
 
 #[wasm_bindgen]
 impl ChaCha20Poly1305 {
     #[wasm_bindgen(constructor)]
-    pub fn new(secret_bytes: &[u8]) -> Result<ChaCha20Poly1305, JsValue> {
+    pub fn new(secret_bytes: &[u8], nonce_bytes: &[u8]) -> Result<ChaCha20Poly1305, JsValue> {
         if secret_bytes.len() != SECRET_LENGTH {
             return Err(JsValue::from_str("Invalid secret key length !"));
         }
+        if nonce_bytes.len() != NONCE_LENGTH {
+            return Err(JsValue::from_str("Invalid nonce key length !"));
+        }
         Ok(ChaCha20Poly1305 {
-            secret_key: secret_bytes.to_vec(),
+            secret: secret_bytes.to_vec(),
+            nonce: nonce_bytes.to_vec(),
         })
     }
 
     #[allow(deprecated)]
-    pub fn encrypt(&self, nonce_bytes: &[u8], payload_bytes: &[u8]) -> Result<Vec<u8>, JsValue> {
-        if nonce_bytes.len() != NONCE_LENGTH {
-            return Err(JsValue::from_str("Invalid nonce key length !"));
-        }
-        let cipher = chacha20poly1305::ChaCha20Poly1305::new_from_slice(&self.secret_key)
+    pub fn encrypt(&self, payload_bytes: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let cipher = chacha20poly1305::ChaCha20Poly1305::new_from_slice(&self.secret)
             .map_err(|e| JsValue::from_str(&format!("Cipher initialization failed: {}", e)))?;
 
-        let nonce = chacha20poly1305::Nonce::from_slice(nonce_bytes);
+        let nonce = chacha20poly1305::Nonce::from_slice(&self.nonce);
 
         cipher
             .encrypt(nonce, payload_bytes)
@@ -38,14 +43,11 @@ impl ChaCha20Poly1305 {
     }
 
     #[allow(deprecated)]
-    pub fn decrypt(&self, nonce_bytes: &[u8], encrypted_bytes: &[u8]) -> Result<Vec<u8>, JsValue> {
-        if nonce_bytes.len() != NONCE_LENGTH {
-            return Err(JsValue::from_str("Invalid nonce key length !"));
-        }
-        let cipher = chacha20poly1305::ChaCha20Poly1305::new_from_slice(&self.secret_key)
+    pub fn decrypt(&self, encrypted_bytes: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let cipher = chacha20poly1305::ChaCha20Poly1305::new_from_slice(&self.secret)
             .map_err(|e| JsValue::from_str(&format!("Cipher initialization failed: {}", e)))?;
 
-        let nonce = chacha20poly1305::Nonce::from_slice(nonce_bytes);
+        let nonce = chacha20poly1305::Nonce::from_slice(&self.nonce);
 
         cipher
             .decrypt(nonce, encrypted_bytes)
@@ -55,30 +57,32 @@ impl ChaCha20Poly1305 {
 
 #[wasm_bindgen]
 pub struct XChaCha20Poly1305 {
-    secret_key: Vec<u8>,
+    secret: Vec<u8>,
+    nonce: Vec<u8>,
 }
 
 #[wasm_bindgen]
 impl XChaCha20Poly1305 {
     #[wasm_bindgen(constructor)]
-    pub fn new(secret_bytes: &[u8]) -> Result<XChaCha20Poly1305, JsValue> {
+    pub fn new(secret_bytes: &[u8], nonce_bytes: &[u8]) -> Result<XChaCha20Poly1305, JsValue> {
         if secret_bytes.len() != SECRET_LENGTH {
             return Err(JsValue::from_str("Invalid secret key length !"));
         }
+        if nonce_bytes.len() != XNONCE_LENGTH {
+            return Err(JsValue::from_str("Invalid nonce key length !"));
+        }
         Ok(XChaCha20Poly1305 {
-            secret_key: secret_bytes.to_vec(),
+            secret: secret_bytes.to_vec(),
+            nonce: nonce_bytes.to_vec(),
         })
     }
 
     #[allow(deprecated)]
-    pub fn encrypt(&self, nonce_bytes: &[u8], data: &[u8]) -> Result<Vec<u8>, JsValue> {
-        if nonce_bytes.len() != XNONCE_LENGTH {
-            return Err(JsValue::from_str("Invalid nonce key length !"));
-        }
-        let cipher = chacha20poly1305::XChaCha20Poly1305::new_from_slice(&self.secret_key)
+    pub fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let cipher = chacha20poly1305::XChaCha20Poly1305::new_from_slice(&self.secret)
             .map_err(|e| JsValue::from_str(&format!("Cipher initialization failed: {}", e)))?;
 
-        let nonce = chacha20poly1305::XNonce::from_slice(nonce_bytes);
+        let nonce = chacha20poly1305::XNonce::from_slice(&self.nonce);
 
         cipher
             .encrypt(nonce, data)
@@ -86,14 +90,11 @@ impl XChaCha20Poly1305 {
     }
 
     #[allow(deprecated)]
-    pub fn decrypt(&self, nonce_bytes: &[u8], encrypted_data: &[u8]) -> Result<Vec<u8>, JsValue> {
-        if nonce_bytes.len() != XNONCE_LENGTH {
-            return Err(JsValue::from_str("Invalid nonce key length !"));
-        }
-        let cipher = chacha20poly1305::XChaCha20Poly1305::new_from_slice(&self.secret_key)
+    pub fn decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let cipher = chacha20poly1305::XChaCha20Poly1305::new_from_slice(&self.secret)
             .map_err(|e| JsValue::from_str(&format!("Cipher initialization failed: {}", e)))?;
 
-        let nonce = chacha20poly1305::XNonce::from_slice(nonce_bytes);
+        let nonce = chacha20poly1305::XNonce::from_slice(&self.nonce);
 
         cipher
             .decrypt(nonce, encrypted_data)
@@ -125,37 +126,33 @@ mod tests {
 
     #[test]
     fn test_chacha20poly1305_encrypt_decrypt() {
-        let key = test_key();
-        let nonce = test_nonce();
-
         let plaintext = b"Hello, World! This is a test message.";
 
-        let cipher = ChaCha20Poly1305::new(&key).unwrap();
+        let cipher = ChaCha20Poly1305::new(&test_key(), &test_nonce()).unwrap();
 
         // Test encryption
-        let encrypted = cipher.encrypt(&nonce, plaintext).unwrap();
+        let encrypted = cipher.encrypt(plaintext).unwrap();
 
         assert_ne!(encrypted, plaintext);
         assert!(encrypted.len() > plaintext.len()); // Should have auth tag
 
         // Test decryption
-        let decrypted = cipher.decrypt(&nonce, &encrypted).unwrap();
+        let decrypted = cipher.decrypt(&encrypted).unwrap();
+
         assert_eq!(decrypted, plaintext);
     }
 
     #[test]
     fn test_xchacha20poly1305_encrypt_decrypt() {
-        let key = test_key();
-        let nonce = test_xnonce();
-
         let plaintext = b"Hello, World! This is a test message for XChaCha20.";
 
-        let cipher = XChaCha20Poly1305::new(&key).unwrap();
+        let cipher = XChaCha20Poly1305::new(&test_key(), &test_xnonce()).unwrap();
 
-        let encrypted = cipher.encrypt(&nonce, plaintext).unwrap();
+        let encrypted = cipher.encrypt(plaintext).unwrap();
         assert_ne!(encrypted, plaintext);
 
-        let decrypted = cipher.decrypt(&nonce, &encrypted).unwrap();
+        let decrypted = cipher.decrypt(&encrypted).unwrap();
+
         assert_eq!(decrypted, plaintext);
     }
 }

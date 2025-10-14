@@ -46,28 +46,29 @@ init().then(() => {
 
     const secrectKey = random(Z, SECRET_LENGTH);
     const secrectBytes = encoder.encode(secrectKey)
+    const nonceKey = random(Z, NONCE_LENGTH);
+    const nonceBytes = encoder.encode(nonceKey);
 
     console.log("secrect key: ", secrectKey);
+    console.log("nonce key: ", nonceKey);
 
-    const xchacha20 = new XChaCha20Poly1305(secrectKey);
+    const xchacha20 = new XChaCha20Poly1305(secrectKey, nonceBytes);
 
-    const nonceKey = random(Z, NONCE_LENGTH);
     const data = random(Z, 50);
 
-    console.log("nonce key: ", nonceKey);
     console.log("data: ", data);
 
     // ========================= [Encrypt] =========================
 
-    const encrypted = xchacha20.encrypt(encoder.encode(nonceKey), encoder.encode(data))
+    const encryptedBytes = xchacha20.encrypt(encoder.encode(data))
+    const encryptedStr = decoder.decode(encryptedBytes)
 
-    console.log("encrypted: ", decoder.decode(encrypted));
+    console.log("encrypted: ", encryptedStr);
 
     // ========================= [Decrypt] =========================
 
-    const decrypted = xchacha20.decrypt(encoder.encode(nonceKey), encrypted)
-
-    const decryptedStr = decoder.decode(decrypted)
+    const decryptedBytes = xchacha20.decrypt(encryptedBytes)
+    const decryptedStr = decoder.decode(decryptedBytes)
 
     console.log("decrypted: ", decryptedStr);
 
