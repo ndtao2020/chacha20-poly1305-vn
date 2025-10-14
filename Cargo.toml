@@ -1,0 +1,20 @@
+[package]
+name = "chacha20-poly1305-vn"
+description = "Chaha20-Poly1305 WASM - Web"
+version = "1.0.0"
+edition = "2024"
+repository = "https://github.com/ndtao2020/chacha20-poly1305-vn"
+authors = ["ndtao2020"]
+license = "MIT License"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+
+[dependencies]
+wasm-bindgen = "0.2"
+getrandom = { version = "0.2", default-features = false, features = ["js"] }
+chacha20poly1305 = { version = "0.10" }
