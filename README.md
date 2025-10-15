@@ -25,18 +25,19 @@ chmod +x build.sh
 ### Publish to NPM
 
 ```sh
-cd pkg-bundler && npm publish
+cd pkg && npm publish
 ```
 
 ## Usage
 
 ```ts
-import { XChaCha20Poly1305 } from 'chacha-poly-wasm-web'
+import instantiate, { XChaCha20Poly1305 } from 'chacha-poly-wasm-web'
 
 const encrypt = async (secret: Uint8Array, nonce: Uint8Array, data: Uint8Array): Promise<Uint8Array | null> => {
   if (typeof WebAssembly !== 'undefined') {
     let xchacha20: XChaCha20Poly1305 | null = null
     try {
+      await instantiate()
       xchacha20 = new XChaCha20Poly1305(secret, nonce)
       return xchacha20.encrypt(data)
     } catch (err) {
@@ -54,6 +55,7 @@ const decrypt = async (secret: Uint8Array, nonce: Uint8Array, encrypted_data: Ui
   if (typeof WebAssembly !== 'undefined') {
     let xchacha20: XChaCha20Poly1305 | null = null
     try {
+      await instantiate()
       xchacha20 = new XChaCha20Poly1305(secret, nonce)
       return xchacha20.decrypt(encrypted_data)
     } catch (err) {
