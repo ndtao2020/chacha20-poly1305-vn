@@ -1,0 +1,34 @@
+{
+    "name": "chacha-poly-wasm-web",
+    "type": "module",
+    "collaborators": [
+        "ndtao2020"
+    ],
+    "description": "ChaCha20-Poly1305 encryption for WebAssembly",
+    "version": "1.3.0",
+    "license": "MIT License",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ndtao2020/chacha20-poly1305-vn"
+    },
+    "files": [
+        "chacha_poly_wasm_web_bg.js",
+        "chacha_poly_wasm_web_bg.wasm",
+        "chacha_poly_wasm_web_bg.wasm.d.ts",
+        "chacha_poly_wasm_web.d.ts",
+        "chacha_poly_wasm_web.js"
+    ],
+    "main": "chacha_poly_wasm_web.js",
+    "types": "chacha_poly_wasm_web.d.ts",
+    "sideEffects": [
+        "./snippets/*"
+    ],
+    "keywords": [
+        "chacha20",
+        "poly1305",
+        "encryption",
+        "wasm",
+        "webassembly",
+        "crypto"
+    ]
+}

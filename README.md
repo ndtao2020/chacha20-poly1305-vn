@@ -2,79 +2,68 @@
 
 [![npm](https://img.shields.io/npm/v/chacha-poly-wasm-web)](https://www.npmjs.com/package/chacha-poly-wasm-web)
 
-### 🛠️ Installing `wasm-pack`
+## Installing `wasm-bindgen-cli`
 
-```
-cargo install wasm-pack
-```
-
-### 🛠️ Build with `wasm-pack build`
-
-```
-wasm-pack build --target web
+```sh
+cargo install wasm-bindgen-cli
+cargo install wasm-opt --locked
 ```
 
-### 🎁 Publish to NPM with `wasm-pack publish`
+## Building via `wasm-bindgen-cli`
 
+* bundler: (produces code for usage with bundlers like Webpack)
+* web: (directly loadable in a web browser)
+* nodejs: (loadable via require as a CommonJS Node.js module)
+* deno: (usable as a Deno module)
+* no-modules: (like the web target but doesn't use ES Modules).
+
+```sh
+chmod +x build.sh
+./build.sh
 ```
-wasm-pack publish
+
+### Publish to NPM
+
+```sh
+cd pkg-bundler && npm publish
 ```
 
 ## Usage
 
-```js
-import init, { XChaCha20Poly1305 } from "chacha-poly-wasm-web";
+```ts
+import { XChaCha20Poly1305 } from 'chacha-poly-wasm-web'
 
-const NONCE_LENGTH = 24;
-const SECRET_LENGTH = 32;
-
-const Z = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789@#";
-
-const random = (characters, length) => {
-    let result = "";
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+const encrypt = async (secret: Uint8Array, nonce: Uint8Array, data: Uint8Array): Promise<Uint8Array | null> => {
+  if (typeof WebAssembly !== 'undefined') {
+    let xchacha20: XChaCha20Poly1305 | null = null
+    try {
+      xchacha20 = new XChaCha20Poly1305(secret, nonce)
+      return xchacha20.encrypt(data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      if (xchacha20) {
+        xchacha20.free()
+      }
     }
-    return result;
-};
+  }
+  return null
+}
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
-
-init().then(() => {
-
-    const secrectKey = random(Z, SECRET_LENGTH);
-    const secrectBytes = encoder.encode(secrectKey)
-    const nonceKey = random(Z, NONCE_LENGTH);
-    const nonceBytes = encoder.encode(nonceKey);
-
-    console.log("secrect key: ", secrectKey);
-    console.log("nonce key: ", nonceKey);
-
-    const xchacha20 = new XChaCha20Poly1305(secrectKey, nonceBytes);
-
-    const data = random(Z, 50);
-
-    console.log("data: ", data);
-
-    // ========================= [Encrypt] =========================
-
-    const encryptedBytes = xchacha20.encrypt(encoder.encode(data))
-    const encryptedStr = decoder.decode(encryptedBytes)
-
-    console.log("encrypted: ", encryptedStr);
-
-    // ========================= [Decrypt] =========================
-
-    const decryptedBytes = xchacha20.decrypt(encryptedBytes)
-    const decryptedStr = decoder.decode(decryptedBytes)
-
-    console.log("decrypted: ", decryptedStr);
-
-    // ========================= [Verification] =========================
-    if (data === decryptedStr) {
-        console.log("Ok !");
+const decrypt = async (secret: Uint8Array, nonce: Uint8Array, encrypted_data: Uint8Array): Promise<Uint8Array | null> => {
+  if (typeof WebAssembly !== 'undefined') {
+    let xchacha20: XChaCha20Poly1305 | null = null
+    try {
+      xchacha20 = new XChaCha20Poly1305(secret, nonce)
+      return xchacha20.decrypt(encrypted_data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      if (xchacha20) {
+        xchacha20.free()
+      }
     }
-});
+  }
+  return null
+}
 ```
